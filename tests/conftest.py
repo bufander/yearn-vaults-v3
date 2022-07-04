@@ -183,3 +183,14 @@ def lossy_strategy(gov, vault, create_lossy_strategy):
 def fee_manager(project, gov):
     fee_manager = gov.deploy(project.FeeManager)
     yield fee_manager
+
+
+@pytest.fixture
+def deposit_into_vault(project):
+    def deposit_into_vault(vault, account, amount=10**18):
+        asset = project.Token.at(vault.asset())
+        asset.mint(account.address, amount, sender=account)
+        asset.approve(vault.address, amount, sender=account)
+        vault.deposit(amount, account.address, sender=account)
+
+    yield deposit_into_vault
