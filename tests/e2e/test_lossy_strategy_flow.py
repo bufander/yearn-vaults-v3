@@ -1,6 +1,9 @@
 from utils.constants import MAX_INT
 import ape
+<<<<<<< HEAD
 import pytest
+=======
+>>>>>>> 39889de (feat: added e2e test for loosy strategy. Added check on VaultV3 to avoid revert)
 
 
 def test_lossy_strategy_flow(
