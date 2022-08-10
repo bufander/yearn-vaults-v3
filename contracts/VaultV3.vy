@@ -128,9 +128,13 @@ allowance: public(HashMap[address, HashMap[address, uint256]])
 
 # Total amount of shares that are currently minted
 total_supply: uint256
+<<<<<<< HEAD
 # Total amount of assets that has been deposited in strategies
 total_debt_: uint256
 # Current assets held in the vault contract. Replacing balanceOf(this) to avoid price_per_share manipulation
+=======
+total_debt_: public(uint256)
+>>>>>>> 5d5e2c1 (feat: added profitable scenario and added some checks on vaultV3)
 total_idle: public(uint256)
 # Minimum amount of assets that should be kept in the vault contract to allow for fast, cheap redeems
 minimum_total_idle: public(uint256)
@@ -421,6 +425,7 @@ def _redeem(sender: address, receiver: address, owner: address, shares_to_burn: 
 
     # load to memory to save gas
     curr_total_idle: uint256 = self.total_idle
+<<<<<<< HEAD
     
     # If there are not enough assets in the Vault contract, we try to free funds from strategies specified above
     if requested_assets > curr_total_idle:
@@ -428,6 +433,13 @@ def _redeem(sender: address, receiver: address, owner: address, shares_to_burn: 
         # TODO: should we replace this with the version including unlocked_profit?
         # take into account that a withdrawing taping onto unlocked profit might break things
         curr_total_debt: uint256 = self.total_debt_
+=======
+
+    if assets > curr_total_idle:
+        self._update_profit()
+        # load to memory to save gas
+        curr_total_debt: uint256 = self._total_debt()
+>>>>>>> 5d5e2c1 (feat: added profitable scenario and added some checks on vaultV3)
 
         # Withdraw from strategies if insufficient total idle
         assets_needed: uint256 = requested_assets - curr_total_idle
@@ -440,7 +452,12 @@ def _redeem(sender: address, receiver: address, owner: address, shares_to_burn: 
             if assets_to_withdraw == 0:
                 continue
 
+<<<<<<< HEAD
             # Vault requests some funds to be fred, for it to be able to pick them back
+=======
+            # TODO: should the vault check that the strategy has unlocked requested funds?
+            # if so, should it just withdraw the unlocked funds and just assume the rest are lost?
+>>>>>>> 5d5e2c1 (feat: added profitable scenario and added some checks on vaultV3)
             IStrategy(strategy).freeFunds(assets_to_withdraw)
 	          # TODO: should the vault check that the strategy has unlocked requested funds?
 	          # if so, should it just withdraw the unlocked funds and just assume the rest are lost?
@@ -595,7 +612,10 @@ def _update_debt(strategy: address) -> uint256:
 	      # TODO: is it worth it to transfer the max_amount between assets_to_withdraw and balance?
         ASSET.transferFrom(strategy, self, assets_to_withdraw)
         self.total_idle += assets_to_withdraw
-        self.total_debt_ -= assets_to_withdraw
+        if assets_to_withdraw >= self.total_debt_:
+            self.total_debt_ = 0
+        else:
+            self.total_debt_ -= assets_to_withdraw
     else:
         # Vault is increasing debt with the strategy by sending more funds
         assets_to_transfer: uint256 = new_debt - current_debt
@@ -742,6 +762,15 @@ def _process_report(strategy: address) -> (uint256, uint256):
         total_fees
     )
     return (gain, loss)    
+
+@internal
+def _update_profit():
+    if self.profit_distribution_rate_ != 0:
+        unlocked_profit: uint256 = self._compute_unlocked_profit()
+        if self.profit_end_date <= block.timestamp:
+            self.profit_distribution_rate_ = 0
+        self.total_debt_ += unlocked_profit
+        self.profit_last_update = block.timestamp
 
 @view
 @internal
