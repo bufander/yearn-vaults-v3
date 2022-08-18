@@ -201,6 +201,7 @@ def test_profitable_strategy_flow(
     assert vault.totalAssets() == pytest.approx(
         vault.convertToAssets(vault.balanceOf(fee_manager)), 1e-5
     )
+    assert vault.totalAssets() == pytest.approx(strategy.totalAssets(), 1e-5)
 
     # Let's empty the strategy and revoke it
     add_debt_to_strategy(gov, strategy, vault, 0)
