@@ -168,7 +168,7 @@ def test_profitable_strategy_flow(
         1e-5,
     )
 
-    with ape.reverts("insufficient total idle"):
+    with ape.reverts("insufficient assets in vault"):
         vault.withdraw(
             vault.convertToAssets(vault.balanceOf(user_1)),
             user_1,

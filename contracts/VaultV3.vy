@@ -422,23 +422,11 @@ def _redeem(sender: address, receiver: address, owner: address, shares_to_burn: 
 
     # load to memory to save gas
     curr_total_idle: uint256 = self.total_idle
-<<<<<<< HEAD
-    
     # If there are not enough assets in the Vault contract, we try to free funds from strategies specified above
     if requested_assets > curr_total_idle:
-        # Load to memory to save gas
-        # TODO: should we replace this with the version including unlocked_profit?
-        # take into account that a withdrawing taping onto unlocked profit might break things
-        curr_total_debt: uint256 = self.total_debt_
-
-        # Withdraw from strategies if insufficient total idle
-        assets_needed: uint256 = requested_assets - curr_total_idle
-=======
-
-    if assets > curr_total_idle:
         unlocked_profit: uint256 = 0
         # If there is not enough debt on storage and there is profit being unlocked, we need to compute unlocked profit till now to fullfil assets
-        if assets > self.total_debt_:
+        if requested_assets > self.total_debt_:
             if self.profit_end_date > block.timestamp:
                 unlocked_profit = (block.timestamp - self.profit_last_update) * self.profit_distribution_rate_ / MAX_BPS
                 # we update last update time as profit is unlocked and will be added to storage debt afterwards
@@ -451,8 +439,7 @@ def _redeem(sender: address, receiver: address, owner: address, shares_to_burn: 
         curr_total_debt: uint256 = self.total_debt_ + unlocked_profit
 
         # withdraw from strategies if insufficient total idle
-        assets_needed: uint256 = assets - curr_total_idle
->>>>>>> fca59d8 (chore: optimized method by deleting equal situation)
+        assets_needed: uint256 = requested_assets - curr_total_idle
         assets_to_withdraw: uint256 = 0
         for strategy in strategies:
             assert self.strategies[strategy].activation != 0, "inactive strategy"
@@ -481,7 +468,7 @@ def _redeem(sender: address, receiver: address, owner: address, shares_to_burn: 
         assert curr_total_idle >= requested_assets, "insufficient assets in vault"
         # commit memory to storage
         self.total_debt_ = curr_total_debt
-
+    
     self._burn_shares(shares, owner)
     self.total_idle = curr_total_idle - requested_assets 
     self.erc20_safe_transfer(ASSET.address, receiver, requested_assets)
@@ -766,16 +753,7 @@ def _process_report(strategy: address) -> (uint256, uint256):
         strategy_params.total_loss,
         total_fees
     )
-    return (gain, loss)    
-
-@internal
-def _update_profit():
-    if self.profit_distribution_rate_ != 0:
-        unlocked_profit: uint256 = self._compute_unlocked_profit()
-        if self.profit_end_date <= block.timestamp:
-            self.profit_distribution_rate_ = 0
-        self.total_debt_ += unlocked_profit
-        self.profit_last_update = block.timestamp
+    return (gain, loss)
 
 @view
 @internal
