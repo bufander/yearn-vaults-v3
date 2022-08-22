@@ -36,9 +36,11 @@ def test_lossy_strategy_flow(
 
     add_debt_to_strategy(gov, strategy, vault, deposit_amount)
 
+    assert strategy.totalSupply() == deposit_amount
+    assert strategy.totalAssets() == deposit_amount
+    assert strategy.balanceOf(vault) == deposit_amount
     assert vault.totalAssets() == deposit_amount
     assert vault.strategies(strategy).current_debt == deposit_amount
-    assert strategy.totalAssets() == deposit_amount
 
     # we simulate loss on strategy
     strategy.setLoss(gov, first_loss, sender=gov)
