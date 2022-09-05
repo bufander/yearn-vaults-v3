@@ -28,7 +28,8 @@ abstract contract ERC4626BaseStrategy is IStrategyERC4626, ERC4626 {
     // TODO: should we force invest and freeFunds to be in deposit and withdraw functions? 
 
     function invest() external override {
-        // TODO: add permissioning ? 
+        // TODO: add permissioning ?
+        _invest();
     }
 
     function investTrigger() external view override virtual returns (bool) {
@@ -36,7 +37,8 @@ abstract contract ERC4626BaseStrategy is IStrategyERC4626, ERC4626 {
     }
 
     function freeFunds(uint256 _amount) external override returns (uint256 _freedFunds) {
-        // TODO: add permissioning ? 
+        // TODO: add permissioning ?
+        _freeFunds(_amount);
     }
 
     function migrate(address _newStrategy) external override {
